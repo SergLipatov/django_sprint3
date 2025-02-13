@@ -4,12 +4,9 @@
 Cодержит определения представлений (views),
 которые обрабатывают HTTP-запросы и возвращают HTTP-ответы.
 """
-
-
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from .models import Category, Post
-
 
 
 def index(request):
@@ -20,8 +17,7 @@ def index(request):
             pub_date__lte=current_time,
             is_published=True,
             category__is_published=True
-        )
-        .order_by('-pub_date')[:5]
+        ).order_by('-pub_date')[:5]
     )
     context = {'post_list': latest_posts}
     return render(request, 'blog/index.html', context)
@@ -39,8 +35,6 @@ def post_detail(request, id):
     HttpResponse: HTTP-ответ с отрендеренным шаблоном.
     """
     current_time = timezone.now()
-
-    # Найти пост или вернуть 404, если условия не выполнены
     post = get_object_or_404(
         Post,
         id=id,
@@ -48,7 +42,6 @@ def post_detail(request, id):
         pub_date__lte=current_time,
         category__is_published=True
     )
-
     context = {'post': post}
     return render(request, 'blog/detail.html', context)
 
@@ -61,18 +54,20 @@ def category_posts(request, category_slug):
     category_slug (str): Идентификатор категории.
 
     Returns:
-    HttpResponse: HTTP-ответ с отрендеренным шаблоном или 404, если категория не опубликована.
+    HttpResponse: HTTP-ответ с отрендеренным шаблоном или 404,
+    если категория не опубликована.
     """
-    category = get_object_or_404(Category, slug=category_slug, is_published=True)
-
-    # Фильтрация публикаций по выбранной категории и условиям
+    category = get_object_or_404(
+        Category,
+        slug=category_slug,
+        is_published=True
+    )
     current_time = timezone.now()
     posts_in_category = Post.objects.filter(
         category=category,
         is_published=True,
         pub_date__lte=current_time
     ).order_by('-pub_date')
-
     context = {
         'category': category,
         'post_list': posts_in_category
