@@ -6,17 +6,25 @@ Cодержит определения представлений (views),
 """
 
 
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from django.utils import timezone
+from .models import Category, Post
 
 
 
 def index(request):
-    """Отображает страницу блога."""
-    template = 'blog/index.html'
-    reversed_posts = list(posts)
-    reversed_posts.reverse()
-    context = {'posts': reversed_posts}
-    return render(request, template, context)
+    """Отображает главную страницу блога с пятью последними публикациями."""
+    current_time = timezone.now()
+    latest_posts = (
+        Post.objects.filter(
+            pub_date__lte=current_time,
+            is_published=True,
+            category__is_published=True
+        )
+        .order_by('-pub_date')[:5]
+    )
+    context = {'post_list': latest_posts}
+    return render(request, 'blog/index.html', context)
 
 
 def post_detail(request, id):
@@ -30,22 +38,43 @@ def post_detail(request, id):
     Returns:
     HttpResponse: HTTP-ответ с отрендеренным шаблоном.
     """
-    template = 'blog/detail.html'
-    context = {'post': posts[id]}
-    return render(request, template, context)
+    current_time = timezone.now()
+
+    # Найти пост или вернуть 404, если условия не выполнены
+    post = get_object_or_404(
+        Post,
+        id=id,
+        is_published=True,
+        pub_date__lte=current_time,
+        category__is_published=True
+    )
+
+    context = {'post': post}
+    return render(request, 'blog/detail.html', context)
 
 
 def category_posts(request, category_slug):
-    """Отображает посты по категориям (пока заготовка).
+    """Отображает публикации в указанной категории.
 
     Parameters:
     request (HttpRequest): Объект запроса.
-
-    category_slug (str): Наименование категории.
+    category_slug (str): Идентификатор категории.
 
     Returns:
-    HttpResponse: HTTP-ответ с отрендеренным шаблоном.
+    HttpResponse: HTTP-ответ с отрендеренным шаблоном или 404, если категория не опубликована.
     """
-    template = 'blog/category.html'
-    context = {'category_slug': category_slug}
-    return render(request, template, context)
+    category = get_object_or_404(Category, slug=category_slug, is_published=True)
+
+    # Фильтрация публикаций по выбранной категории и условиям
+    current_time = timezone.now()
+    posts_in_category = Post.objects.filter(
+        category=category,
+        is_published=True,
+        pub_date__lte=current_time
+    ).order_by('-pub_date')
+
+    context = {
+        'category': category,
+        'post_list': posts_in_category
+    }
+    return render(request, 'blog/category.html', context)

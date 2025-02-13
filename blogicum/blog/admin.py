@@ -13,17 +13,20 @@ class PostInline(admin.TabularInline):
     extra = 0
 
 class CategoryAdmin(admin.ModelAdmin):
-    inlines = [PostInline]
+    #inlines = [PostInline]
+    list_display = ('title', 'description', 'slug', 'is_published', 'created_at')
+    list_editable = ('is_published',)
 
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_published', 'created_at')
+    list_editable = ('is_published',)
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'is_published', 'category')
-    list_editable = ('is_published', 'category')
-    search_fields = ('title',)
-    list_filter = ('is_published',)
-    list_display_links = ('title',)
+    list_display = ('title', 'is_published', 'category', 'location', 'created_at', 'pub_date')
+    list_editable = ('is_published',)
+    #search_fields = ('title',)
+    #list_filter = ('is_published',)
+    #list_display_links = ('title',)
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(Category, CategoryAdmin)
