@@ -63,7 +63,7 @@ def category_posts(request, category_slug):
         is_published=True
     )
     current_time = timezone.now()
-    posts_in_category = Post.objects.filter(
+    posts_in_category = category.posts.filter(
         category=category,
         is_published=True,
         pub_date__lte=current_time
