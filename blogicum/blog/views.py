@@ -5,20 +5,16 @@ Cодержит определения представлений (views),
 которые обрабатывают HTTP-запросы и возвращают HTTP-ответы.
 """
 from django.shortcuts import render, get_object_or_404
-from django.utils import timezone
+
 from .models import Category, Post
+
+
+NUMBER_OF_POST_ON_THE_MAIN_PAGE = 5
 
 
 def index(request):
     """Отображает главную страницу блога с пятью последними публикациями."""
-    current_time = timezone.now()
-    latest_posts = (
-        Post.objects.filter(
-            pub_date__lte=current_time,
-            is_published=True,
-            category__is_published=True
-        ).order_by('-pub_date')[:5]
-    )
+    latest_posts = Post.objects.published()[:NUMBER_OF_POST_ON_THE_MAIN_PAGE]
     context = {'post_list': latest_posts}
     return render(request, 'blog/index.html', context)
 
@@ -34,14 +30,7 @@ def post_detail(request, id):
     Returns:
     HttpResponse: HTTP-ответ с отрендеренным шаблоном.
     """
-    current_time = timezone.now()
-    post = get_object_or_404(
-        Post,
-        id=id,
-        is_published=True,
-        pub_date__lte=current_time,
-        category__is_published=True
-    )
+    post = get_object_or_404(Post.objects.published(), id=id)
     context = {'post': post}
     return render(request, 'blog/detail.html', context)
 
@@ -60,14 +49,8 @@ def category_posts(request, category_slug):
     category = get_object_or_404(
         Category,
         slug=category_slug,
-        is_published=True
     )
-    current_time = timezone.now()
-    posts_in_category = category.posts.filter(
-        category=category,
-        is_published=True,
-        pub_date__lte=current_time
-    ).order_by('-pub_date')
+    posts_in_category = category.blog_post_related.published()
     context = {
         'category': category,
         'post_list': posts_in_category
