@@ -4,12 +4,21 @@
 Cодержит определения представлений (views),
 которые обрабатывают HTTP-запросы и возвращают HTTP-ответы.
 """
+from django.http import Http404
 from django.shortcuts import render, get_object_or_404
 
 from .models import Category, Post
 
 
 NUMBER_OF_POST_ON_THE_MAIN_PAGE = 5
+
+
+def get_published_posts_in_category(category):
+    """Возвращает посты из категории или 404 если их нет."""
+    posts = category.blog_post_related.published()
+    if not posts.exists():
+        raise Http404("Нет опубликованных постов в этой категории.")
+    return posts
 
 
 def index(request):
@@ -50,7 +59,8 @@ def category_posts(request, category_slug):
         Category,
         slug=category_slug,
     )
-    posts_in_category = category.blog_post_related.published()
+    posts_in_category = get_published_posts_in_category(category)
+
     context = {
         'category': category,
         'post_list': posts_in_category
