@@ -8,7 +8,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from .managers import PostManager
+from .querysets import PostQuerySet
 
 User = get_user_model()
 
@@ -106,10 +106,10 @@ class Post(BaseModel):
         null=True,
         verbose_name='Категория',
     )
-    objects = PostManager()
+    objects = PostQuerySet.as_manager()
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
         default_related_name = '%(app_label)s_%(model_name)s_related'
